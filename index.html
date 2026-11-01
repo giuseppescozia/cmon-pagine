@@ -146,7 +146,8 @@ function propostaPdf(pr){var box=$('#pdfb');if(PDFURL){mostraPdf(box);return}
   lib.then(function(){chiama('clienteModulo',[D.token],function(b64){if(!b64){box.innerHTML='Il modulo non è disponibile: lo chieda all\'agente.';return}
     var raw=atob(b64),u8=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)u8[i]=raw.charCodeAt(i);
     var L=PDFLib;L.PDFDocument.load(u8).then(function(doc){return doc.embedFont(L.StandardFonts.Helvetica).then(function(f){var pg=doc.getPages(),blu=L.rgb(.05,.16,.55);
-      (pr.campi||[]).forEach(function(c){var t=String((pr.v||{})[c.k]||'');if(!t||!pg[c.p-1])return;var s=10;while(s>6&&f.widthOfTextAtSize(t,s)>c.w)s-=.5;
+      (pr.campi||[]).forEach(function(c){var v=pr.v||{},t=String(v[c.k]||'');if(!t||!pg[c.p-1])return;if(c.salta&&String(v[c.se||c.k]||'')===c.salta)return;
+        if(c.copri)pg[c.p-1].drawRectangle({x:c.copri[0],y:c.copri[1],width:c.copri[2],height:c.copri[3],color:L.rgb(1,1,1)});var s=10;while(s>6&&f.widthOfTextAtSize(t,s)>c.w)s-=.5;
         while(t.length>1&&f.widthOfTextAtSize(t,s)>c.w)t=t.slice(0,-1);pg[c.p-1].drawText(t,{x:c.x,y:c.y,size:s,font:f,color:blu})});
       pg.forEach(function(p){var w=p.getWidth(),h=p.getHeight();p.drawText('FAC-SIMILE',{x:w/2-190,y:h/2-120,size:84,font:f,color:L.rgb(.84,.1,.17),opacity:.18,rotate:L.degrees(35)})});
       return doc.save()})}).then(function(bytes){PDFURL=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));mostraPdf(box)}).catch(function(){box.innerHTML='Non sono riuscito a preparare il modulo: riprovi tra poco.'})},
