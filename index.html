@@ -48,6 +48,7 @@ var D=/*DATI*/null,API='https://script.google.com/macros/s/AKfycby9Cq9WauFadqGQ0
 function chiama(fn,args,ok,ko){ko=ko||function(){};
   if(window.google&&google.script&&google.script.run){var r=google.script.run.withSuccessHandler(ok).withFailureHandler(ko);r[fn].apply(r,args);return}
   var p=fn==='clienteFoto'?fetch(API+'?api=foto&k='+encodeURIComponent(args[0])+'&u='+encodeURIComponent(JSON.stringify(args[1])),{credentials:'omit'})
+    :fn==='clienteModulo'?fetch(API+'?api=modulo&k='+encodeURIComponent(args[0]),{credentials:'omit'})
     :fetch(API,{method:'POST',credentials:'omit',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({api:fn,k:args[0],a:args.slice(1)})});
   p.then(function(r){return r.json()}).then(function(o){if(o.errore)throw new Error(o.errore);ok(o.r)}).catch(function(x){ko({message:x&&x.message?x.message:'Connessione non riuscita, riprovi.'})})}
 var VU='data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',FC={},FA={},FQ=[],FN=0;
@@ -102,7 +103,7 @@ function appunt(){var d=D.d||{},fine=Date.parse(d.fine||d.quando),dopo=d.modo===
 function eu(n){return '€ '+Math.round(Number(n)||0).toLocaleString('it-IT')}
 function pkLista(d){var p=d.pk;if(!p)return '';var l=[];
   if(p.sc)l.push(['sc','⌂','La scheda dell\'immobile','foto, descrizione, zona']);if(p.chi&&D.chi&&(D.chi.testo||D.chi.titolo))l.push(['chi','i','Chi siamo',D.chi.anno?D.agenzia+', dal '+D.chi.anno:D.agenzia]);
-  if(p.costi)l.push(['costi','€','Costi dell\'acquisto','mediazione, imposte e notaio']);if(p.ape)l.push(['ape','A','Attestato energetico',p.ape.esente?'esente':'classe '+(p.ape.classe||'')]);
+  if(p.costi)l.push(['costi','€','Costi dell\'acquisto','mediazione, imposte e notaio']);if(p.prop)l.push(['prop','✎','Proposta d\'acquisto','il modulo da leggere con calma (fac-simile)']);if(p.ape)l.push(['ape','A','Attestato energetico',p.ape.esente?'esente':'classe '+(p.ape.classe||'')]);
   if((p.plan||[]).length)l.push(['plan','▦','Planimetria','']);if(p.doc)l.push(['doc','✓','Documenti da preparare','se decide di fare una proposta']);
   if(!l.length)return '';return '<div class="h3">Prima della visita</div><div class="pvl">'+l.map(function(x){return '<button data-pv="'+x[0]+'"><i>'+e(x[1])+'</i><span><b>'+e(x[2])+'</b>'+(x[3]?'<small>'+e(x[3])+'</small>':'')+'</span><em>›</em></button>'}).join('')+'</div>'}
 function indietro(){CUR=null;appunt();scrollTo(0,0)}
@@ -132,10 +133,25 @@ function pkVoce(k){var p=(D.d||{}).pk||{},h='';scrollTo(0,0);
     h+='<div class="box meta">Importi indicativi, calcolati sul prezzo richiesto. Il conteggio preciso lo fa il notaio; noi l\'aiutiamo a stimarlo prima della proposta.</div>'}
   if(k==='ape'){var a=p.ape||{},cl={'A4':'#0b8a3e','A3':'#0b8a3e','A2':'#2aa84a','A1':'#47b54b','A':'#2aa84a','B':'#8cc63f','C':'#d4d42a','D':'#f2c21b','E':'#f28c1b','F':'#e2531e','G':'#c9161d'};
     h=pkTesta('Attestato energetico')+(a.esente?'<p>L\'immobile è esente dall\'attestato di prestazione energetica.</p>':'<div class="box" style="display:flex;align-items:center"><span class="ape" style="background:'+(cl[String(a.classe).toUpperCase()]||'#5f6880')+'">'+e(a.classe)+'</span><div><b>Classe energetica '+e(a.classe)+'</b>'+(a.ipe?'<div class="meta">'+e(a.ipe)+' kWh/m² anno</div>':'')+'</div></div><p class="meta">Più la lettera è vicina alla A, meno consuma la casa.</p>')}
+  if(k==='prop'){h=pkTesta('Proposta d\'acquisto')+'<p>È il modulo che firmerà se decide di fare una proposta, con i dati dell\'immobile già scritti. Proprietari e prezzo restano vuoti: li compileremo insieme.</p><div id="pdfb" class="box meta">Preparo il modulo…</div>';
+    $('#app').innerHTML=h+'<button class="btn b2" onclick="indietro()">Torna all\'appuntamento</button>'+agCard()+'</div>'+piede();propostaPdf(p.prop);return}
   if(k==='plan')h=pkTesta('Planimetria')+'<div class="plan">'+(p.plan||[]).map(function(u){return '<img src="'+VU+'" data-u="'+e(u)+'" alt="Planimetria" style="min-height:120px">'}).join('')+'</div>';
   if(k==='doc'){var r=String(p.doc||'').split('\n'),out='',ap=false;r.forEach(function(x){x=x.trim();if(!x){if(ap){out+='</ul>';ap=false}return}if(/:$/.test(x)){if(ap){out+='</ul>';ap=false}out+='<div class="h3">'+e(x.slice(0,-1))+'</div>';return}if(!ap){out+='<ul class="lst">';ap=true}out+='<li>'+e(x.replace(/^[-•·]\s*/,''))+'</li>'});if(ap)out+='</ul>';
     h=pkTesta('Documenti da preparare')+out}
   $('#app').innerHTML=h+'<button class="btn b2" onclick="indietro()">Torna all\'appuntamento</button>'+agCard()+'</div>'+piede();foto(true)}
+/* il modulo vero (PDF dell'agenzia) con i dati scritti sopra e "FAC-SIMILE" su ogni pagina; si costruisce qui, nel telefono */
+var PDFURL='';
+function propostaPdf(pr){var box=$('#pdfb');if(PDFURL){mostraPdf(box);return}
+  var lib=window.PDFLib?Promise.resolve():new Promise(function(ok,ko){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js';s.onload=ok;s.onerror=ko;document.head.appendChild(s)});
+  lib.then(function(){chiama('clienteModulo',[D.token],function(b64){if(!b64){box.innerHTML='Il modulo non è disponibile: lo chieda all\'agente.';return}
+    var raw=atob(b64),u8=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)u8[i]=raw.charCodeAt(i);
+    var L=PDFLib;L.PDFDocument.load(u8).then(function(doc){return doc.embedFont(L.StandardFonts.Helvetica).then(function(f){var pg=doc.getPages(),blu=L.rgb(.05,.16,.55);
+      (pr.campi||[]).forEach(function(c){var t=String((pr.v||{})[c.k]||'');if(!t||!pg[c.p-1])return;var s=10;while(s>6&&f.widthOfTextAtSize(t,s)>c.w)s-=.5;
+        while(t.length>1&&f.widthOfTextAtSize(t,s)>c.w)t=t.slice(0,-1);pg[c.p-1].drawText(t,{x:c.x,y:c.y,size:s,font:f,color:blu})});
+      pg.forEach(function(p){var w=p.getWidth(),h=p.getHeight();p.drawText('FAC-SIMILE',{x:w/2-190,y:h/2-120,size:84,font:f,color:L.rgb(.84,.1,.17),opacity:.18,rotate:L.degrees(35)})});
+      return doc.save()})}).then(function(bytes){PDFURL=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));mostraPdf(box)}).catch(function(){box.innerHTML='Non sono riuscito a preparare il modulo: riprovi tra poco.'})},
+    function(){box.innerHTML='Non sono riuscito a caricare il modulo: riprovi tra poco.'})}).catch(function(){box.innerHTML='Non sono riuscito a caricare il modulo: controlli la connessione.'})}
+function mostraPdf(box){box.className='';box.innerHTML='<a class="btn b1" href="'+PDFURL+'" target="_blank" rel="noopener">Apri il modulo</a><a class="btn b2" href="'+PDFURL+'" download="Proposta d\'acquisto - fac-simile.pdf">Scarica il PDF</a>'}
 function vendeHtml(d){var v=d.vende;if(!v)return '';
   if(v.chiedi==='indirizzo')return '<div class="box" id="vd"><b>Per la casa che vende'+(v.zona?' in zona '+e(v.zona):'')+'</b><div class="meta" style="margin:4px 0 8px">Se vuole, ci lasci l\'indirizzo e le portiamo una valutazione all\'appuntamento.</div><input id="vi" placeholder="Via e numero civico"><button class="btn b2" id="vs">Invia</button></div>';
   return '<div class="box" id="vd"><b>Ha una casa da vendere?</b><div class="meta" style="margin:4px 0 8px">Se vuole, le prepariamo una valutazione gratuita.</div><button class="btn b2" id="vy">Sì, mi interessa</button></div>'}
