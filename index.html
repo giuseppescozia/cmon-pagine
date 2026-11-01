@@ -146,12 +146,21 @@ function propostaPdf(pr){var box=$('#pdfb');if(PDFURL){mostraPdf(box);return}
   lib.then(function(){chiama('clienteModulo',[D.token],function(b64){if(!b64){box.innerHTML='Il modulo non è disponibile: lo chieda all\'agente.';return}
     var raw=atob(b64),u8=new Uint8Array(raw.length);for(var i=0;i<raw.length;i++)u8[i]=raw.charCodeAt(i);
     var L=PDFLib;L.PDFDocument.load(u8).then(function(doc){return doc.embedFont(L.StandardFonts.Helvetica).then(function(f){var pg=doc.getPages(),blu=L.rgb(.05,.16,.55);
-      (pr.campi||[]).forEach(function(c){var v=pr.v||{},t=String(v[c.k]||'');if(!t||!pg[c.p-1])return;if(c.salta&&String(v[c.se||c.k]||'')===c.salta)return;
+      (pr.campi||[]).forEach(function(c){var v=pr.v||{};if(c.tipo==='para'&&pg[c.p-1]){paraPdf(pg[c.p-1],f,c,v,blu,L);return}var t=String(v[c.k]||'');if(!t||!pg[c.p-1])return;if(c.salta&&String(v[c.se||c.k]||'')===c.salta)return;
         if(c.copri)pg[c.p-1].drawRectangle({x:c.copri[0],y:c.copri[1],width:c.copri[2],height:c.copri[3],color:L.rgb(1,1,1)});var s=10;while(s>6&&f.widthOfTextAtSize(t,s)>c.w)s-=.5;
         while(t.length>1&&f.widthOfTextAtSize(t,s)>c.w)t=t.slice(0,-1);pg[c.p-1].drawText(t,{x:c.x,y:c.y,size:s,font:f,color:blu})});
       pg.forEach(function(p){var w=p.getWidth(),h=p.getHeight();p.drawText('FAC-SIMILE',{x:w/2-190,y:h/2-120,size:84,font:f,color:L.rgb(.84,.1,.17),opacity:.18,rotate:L.degrees(35)})});
       return doc.save()})}).then(function(bytes){PDFURL=URL.createObjectURL(new Blob([bytes],{type:'application/pdf'}));mostraPdf(box)}).catch(function(){box.innerHTML='Non sono riuscito a preparare il modulo: riprovi tra poco.'})},
     function(){box.innerHTML='Non sono riuscito a caricare il modulo: riprovi tra poco.'})}).catch(function(){box.innerHTML='Non sono riuscito a caricare il modulo: controlli la connessione.'})}
+/* un paragrafo del modulo riscritto per intero: testo nero, dati dell'immobile in blu, {_:N} è una riga vuota lunga N punti */
+function paraPdf(page,f,c,v,blu,L){var s=c.size||10,nero=L.rgb(.1,.1,.12),parti=[],re=/\{([^}]+)\}/g,i=0,m,tx=c.testo||'';
+  while((m=re.exec(tx))){if(m.index>i)parti.push([tx.slice(i,m.index),0]);var k=m[1];if(k.indexOf('_:')===0){var n=+k.slice(2),u='_';while(f.widthOfTextAtSize(u+'_',s)<n)u+='_';parti.push([u,0])}else parti.push([String(v[k]||'________'),1]);i=re.lastIndex}
+  if(i<tx.length)parti.push([tx.slice(i),0]);
+  var parole=[];parti.forEach(function(p){p[0].split(/(\s+)/).forEach(function(w){if(w)parole.push([w,p[1]])})});
+  page.drawRectangle({x:c.copri[0],y:c.copri[1],width:c.copri[2],height:c.copri[3],color:L.rgb(1,1,1)});
+  var x=c.x,y=c.y,sp=f.widthOfTextAtSize(' ',s);
+  parole.forEach(function(w){if(/^\s+$/.test(w[0])){x+=sp;return}var lw=f.widthOfTextAtSize(w[0],s);if(x+lw>c.x+c.w&&x>c.x){x=c.x;y-=c.lh||18}
+    page.drawText(w[0],{x:x,y:y,size:s,font:f,color:w[1]?blu:nero});x+=lw})}
 function mostraPdf(box){box.className='';box.innerHTML='<a class="btn b1" href="'+PDFURL+'" target="_blank" rel="noopener">Apri il modulo</a><a class="btn b2" href="'+PDFURL+'" download="Proposta d\'acquisto - fac-simile.pdf">Scarica il PDF</a>'}
 function vendeHtml(d){var v=d.vende;if(!v)return '';
   if(v.chiedi==='indirizzo')return '<div class="box" id="vd"><b>Per la casa che vende'+(v.zona?' in zona '+e(v.zona):'')+'</b><div class="meta" style="margin:4px 0 8px">Se vuole, ci lasci l\'indirizzo e le portiamo una valutazione all\'appuntamento.</div><input id="vi" placeholder="Via e numero civico"><button class="btn b2" id="vs">Invia</button></div>';
