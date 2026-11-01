@@ -175,7 +175,7 @@ function corpo(d){
   return ''}
 function avvia(){stato={privacy:D.privacy};document.title=(D.d&&D.d.tipo==='app')?'Il nostro appuntamento':(D.d&&D.d.titolo)||'Scheda immobile';if(stato.privacy&&stato.privacy.informativa)vista();else privacy(false)}
 function fine(t,ag){$('#app').innerHTML='<div class="pad" style="max-width:480px;margin:40px auto"><h2>'+e(ag||'')+'</h2><p>'+e(t)+'</p></div>'}
-if(D)avvia();else{var K=(location.search.match(/[?&]k=([a-f0-9]+)/i)||[])[1]||'';
+if(D)avvia();else{var K=(location.search.match(/[?&]k=([A-Za-z0-9]+)/)||[])[1]||'';
   $('#app').innerHTML='<div class="pad" style="color:#5f6880;text-align:center;margin-top:60px">Carico la scheda…</div>';
   if(!K||API.indexOf('http')!==0)fine('Questo link non è valido.');
   else fetch(API+'?api=dati&k='+K,{credentials:'omit'}).then(function(r){return r.json()}).then(function(o){if(o.errore)return fine(o.errore,o.agenzia);D=o.dati;avvia()}).catch(function(){fine('Non riesco a caricare la scheda. Controlli la connessione e riprovi.')})}
