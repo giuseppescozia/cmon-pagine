@@ -28,6 +28,12 @@ h1{font-size:21px;line-height:1.25;margin:0 0 4px}.loc{font-weight:700;font-size
 textarea{width:100%;border:1.5px solid var(--li);border-radius:10px;padding:10px;font:14px Arial;min-height:70px}
 .map{position:relative;width:256px;height:256px;border-radius:10px;overflow:hidden;margin:0 auto}.map img{position:absolute;width:128px;height:128px}.map i{position:absolute;border-radius:50%;background:rgba(29,79,216,.2);border:2px solid rgba(29,79,216,.65)}
 .plan img{width:100%;border:1px solid var(--li);border-radius:8px;margin-top:8px;background:#fff}
+.box{background:var(--so);border-radius:12px;padding:14px;margin:12px 0}.when{font-weight:800;font-size:18px}.meta{color:var(--mu);font-size:13px}
+.lnk{display:inline-block;margin-top:8px;color:var(--bl);font-weight:700;text-decoration:none}
+.ore{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.ore span{background:#fff;border:1.5px solid var(--li);border-radius:10px;padding:5px 10px;font-weight:800}
+.opt{display:block;width:100%;text-align:left;border:1.5px solid var(--li);background:#fff;border-radius:12px;padding:12px 14px;font:700 14px Arial;margin-top:8px;cursor:pointer;color:var(--fg)}.opt.on{border-color:var(--bl);background:#eef3fe}
+.chips{display:flex;flex-wrap:wrap;gap:6px}.chip{border:1.5px solid var(--li);background:#fff;border-radius:16px;padding:6px 12px;font:700 13px Arial;cursor:pointer;color:var(--fg)}.chip.on{background:var(--nv);border-color:var(--nv);color:#fff}
+.box input,#vd input{width:100%;border:1.5px solid var(--li);border-radius:10px;padding:10px;font:14px Arial}
 </style></head><body><div class="w" id="app"></div>
 <script>
 var D=/*DATI*/null,API='https://script.google.com/macros/s/AKfycby9Cq9WauFadqGQ00uPIv1dknVyWEnSvXnDMSeqMU2_pQPhJc_MRssHIsKxyf1eLJD8/exec';
@@ -48,16 +54,52 @@ function testa(){var d=D.d||{};return '<div class="top">'+(D.logo?'<img src="'+D
 function piede(){return '<div class="foot">'+e(D.agenzia)+(stato.privacy&&stato.privacy.informativa?' · <button onclick="privacy(true)">Le sue scelte sulla privacy</button>':'')+'</div>'}
 function privacy(rivedi){var p=stato.privacy||{},d=D.d||{};
   $('#app').innerHTML=testa()+'<div class="pad"><div style="font-weight:800;font-size:18px;margin-bottom:4px">'+(D.nome?'Buongiorno '+e(String(D.nome).split(' ')[0].charAt(0)+String(D.nome).split(' ')[0].slice(1).toLowerCase()):'Buongiorno')+'</div>'
-   +'<div style="color:#5f6880;font-size:14px">'+(rivedi?'Qui può cambiare le sue scelte in qualsiasi momento.':e(D.agente.nome||'L\'agenzia')+' le ha mandato la scheda di un immobile. Prima di aprirla, ci serve la presa visione dell\'informativa sulla privacy.')+'</div>'
+   +'<div style="color:#5f6880;font-size:14px">'+(rivedi?'Qui può cambiare le sue scelte in qualsiasi momento.':e(D.agente.nome||'L\'agenzia')+' le ha mandato '+(D.d&&D.d.tipo==='app'?'i dettagli del vostro appuntamento':'la scheda di un immobile')+'. Prima di aprirla, ci serve la presa visione dell\'informativa sulla privacy.')+'</div>'
    +'<label class="ck"><input type="checkbox" id="c1" '+(p.informativa?'checked':'')+'><span><b>Ho letto l\'informativa sulla privacy</b> <a href="#" id="leggi" style="color:#1d4fd8">leggi</a><small>Necessaria per vedere la scheda</small></span></label><div class="inf" id="inf" hidden>'+e(D.informativa)+'</div>'
    +'<label class="ck"><input type="checkbox" id="c2" '+(p.avvisi?'checked':'')+'><span><b>Avvisatemi quando entra un immobile adatto alla mia ricerca</b><small>Facoltativo · solo immobili simili a quello che cerca</small></span></label>'
    +'<label class="ck"><input type="checkbox" id="c3" '+(p.novita?'checked':'')+'><span><b>Novità e iniziative dell\'agenzia</b><small>Facoltativo · eventi, servizi, promozioni</small></span></label>'
-   +'<button class="btn b1" id="vai">'+(rivedi?'Salva le scelte':'Apri la scheda')+'</button><div id="msg"></div>'
+   +'<button class="btn b1" id="vai">'+(rivedi?'Salva le scelte':D.d&&D.d.tipo==='app'?'Continua':'Apri la scheda')+'</button><div id="msg"></div>'
    +'<div style="color:#5f6880;font-size:12.5px;text-align:center;margin-top:10px">Può cambiare le scelte in qualsiasi momento dal fondo della pagina.</div></div>';
   $('#leggi').onclick=function(ev){ev.preventDefault();$('#inf').hidden=!$('#inf').hidden};
   $('#vai').onclick=function(){if(!$('#c1').checked){$('#msg').innerHTML='<div class="err">Per vedere la scheda serve la presa visione dell\'informativa.</div>';return}
     var b=this;b.disabled=true;b.textContent='Un momento…';
-    chiama('clienteConsensi',[D.token,{informativa:true,avvisi:$('#c2').checked,novita:$('#c3').checked}],function(r){stato.privacy=JSON.parse(r);scheda()},function(x){b.disabled=false;b.textContent='Riprova';$('#msg').innerHTML='<div class="err">'+e(x.message||x)+'</div>'})}}
+    chiama('clienteConsensi',[D.token,{informativa:true,avvisi:$('#c2').checked,novita:$('#c3').checked}],function(r){stato.privacy=JSON.parse(r);vista()},function(x){b.disabled=false;b.textContent='Riprova';$('#msg').innerHTML='<div class="err">'+e(x.message||x)+'</div>'})}}
+function vista(){if(D.d&&D.d.tipo==='app')appunt();else scheda()}
+function nomeC(){var n=String(D.nome||'').split(' ')[0];return n?n.charAt(0)+n.slice(1).toLowerCase():''}
+function saluto(){var n=nomeC();return 'Buongiorno'+(n?' '+e(n):'')+', '}
+function quandoT(s,ora){var d=new Date(s);if(isNaN(d))return '';var t=d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'});t=t.charAt(0).toUpperCase()+t.slice(1);if(ora!==false&&String(s).length>10)t+=' · ore '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});return t}
+function oraT(s){var d=new Date(s);return isNaN(d)?'':d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
+function agCard(){var ag=D.agente||{},tel=String(ag.tel||'').replace(/\D/g,''),wa=tel?'https://wa.me/'+(tel.indexOf('39')===0?tel:'39'+tel):'';
+  return '<div class="ag">'+(ag.foto?'<img src="'+ag.foto+'" alt="">':'<div class="av">'+e(String(ag.nome||'?').split(' ').map(function(x){return x.charAt(0)}).slice(0,2).join(''))+'</div>')+'<div><b>'+e(ag.nome)+'</b><div style="color:#5f6880;font-size:13px">'+e(D.agenzia)+'</div><div style="margin-top:4px">'+(tel?'<a href="tel:+'+(tel.indexOf('39')===0?tel:'39'+tel)+'">Chiama</a><a href="'+wa+'" target="_blank" rel="noopener">WhatsApp</a>':'')+(ag.mail?'<a href="mailto:'+e(ag.mail)+'">Mail</a>':'')+'</div></div></div>'}
+/* appuntamento: conferma (o avviso), riepilogo delle visite per il proprietario, e dopo la visita il riscontro */
+function appunt(){var d=D.d||{},fine=Date.parse(d.fine||d.quando),dopo=d.modo==='riscontro'||(d.ruolo==='cliente'&&/VISITA/i.test(d.tipoApp||'')&&!isNaN(fine)&&Date.now()>fine+30*60000);
+  if(dopo)return riscontro();
+  var tipoL=/VISITA/i.test(d.tipoApp||'')?'Visita':/STIMA|ACQUISIZIONE/i.test(d.tipoApp||'')?'Valutazione dell\'immobile':'Appuntamento';
+  var maps=d.luogo?'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(d.luogo):'',chiedi=d.modo==='chiedi'||d.modo==='riepilogo';
+  var h=testa()+'<div class="pad"><div style="font-size:16px">'+saluto()+(d.modo==='chiedi'?'le confermo il nostro appuntamento:':d.modo==='riepilogo'?'ecco le visite in programma al suo immobile:':'le ricordo il nostro appuntamento:')+'</div>';
+  if(d.modo==='riepilogo')h+='<div class="box"><div class="when">'+e(quandoT(d.quando,false))+'</div><div class="meta">'+e((d.imm&&d.imm.titolo)||'')+(d.luogo?'<br>'+e(d.luogo):'')+'</div><div class="ore">'+(d.visite||[]).map(function(v){return '<span>'+e(oraT(v.quando))+'</span>'}).join('')+'</div><div class="meta" style="margin-top:6px">'+(d.visite||[]).length+((d.visite||[]).length===1?' visita':' visite')+'</div></div>';
+  else h+='<div class="box"><div class="when">'+e(quandoT(d.quando))+'</div><div class="meta">'+e(tipoL)+(d.imm&&d.imm.titolo?' · '+e(d.imm.titolo):'')+(d.luogo?'<br>'+e(d.luogo):'')+'</div>'+(maps?'<a class="lnk" href="'+maps+'" target="_blank" rel="noopener">Apri in Maps</a>':'')+'</div>';
+  if(chiedi)h+='<div id="cf"><div style="font-weight:700;margin-top:6px">'+(d.modo==='riepilogo'?'Ci conferma le visite?':'Ci conferma la sua presenza?')+'</div><button class="btn b3" id="si">'+(d.modo==='riepilogo'?'Sì, confermo':'Sì, ci sarò')+'</button><button class="btn b2" id="sp">'+(d.modo==='riepilogo'?'Devo spostare qualcosa':'Devo spostarlo')+'</button></div>';
+  h+=vendeHtml(d)+agCard()+'</div>'+piede();$('#app').innerHTML=h;
+  var ag=(D.agente&&D.agente.nome)||'L\'agente';
+  if(chiedi){$('#si').onclick=function(){var b=this;b.disabled=true;b.textContent='Un momento…';chiama('clienteConferma',[D.token,'si',''],function(){$('#cf').innerHTML='<div class="ok">Grazie, a presto!</div>'},function(x){b.disabled=false;b.textContent='Riprova'})};
+    $('#sp').onclick=function(){$('#cf').innerHTML='<div style="font-weight:700;margin-top:6px">Quando le andrebbe meglio?</div><textarea id="spn" placeholder="Giorni e orari comodi (facoltativo)"></textarea><button class="btn b1" id="spi">Invia</button>';
+      $('#spi').onclick=function(){var b=this;b.disabled=true;b.textContent='Invio…';chiama('clienteConferma',[D.token,'sposta',$('#spn').value],function(){$('#cf').innerHTML='<div class="ok">Grazie, '+e(ag)+' la ricontatterà per trovare un altro momento.</div>'},function(x){b.disabled=false;b.textContent='Riprova'})}}}
+  bindVende()}
+function vendeHtml(d){var v=d.vende;if(!v)return '';
+  if(v.chiedi==='indirizzo')return '<div class="box" id="vd"><b>Per la casa che vende'+(v.zona?' in zona '+e(v.zona):'')+'</b><div class="meta" style="margin:4px 0 8px">Se vuole, ci lasci l\'indirizzo e le portiamo una valutazione all\'appuntamento.</div><input id="vi" placeholder="Via e numero civico"><button class="btn b2" id="vs">Invia</button></div>';
+  return '<div class="box" id="vd"><b>Ha una casa da vendere?</b><div class="meta" style="margin:4px 0 8px">Se vuole, le prepariamo una valutazione gratuita.</div><button class="btn b2" id="vy">Sì, mi interessa</button></div>'}
+function bindVende(){var y=$('#vy');if(y)y.onclick=function(){$('#vd').innerHTML='<b>Dove si trova la casa?</b><input id="vi" placeholder="Via, numero civico e comune" style="margin-top:8px"><textarea id="vn" placeholder="Qualcosa da aggiungere? (facoltativo)"></textarea><button class="btn b1" id="vs">Invia</button>';bs()};bs();
+  function bs(){var b=$('#vs');if(!b)return;b.onclick=function(){var ind=($('#vi')||{}).value||'';if(!ind.trim()){$('#vi').focus();return}b.disabled=true;b.textContent='Invio…';
+    chiama('clienteVende',[D.token,{indirizzo:ind,nota:($('#vn')||{}).value||''}],function(){$('#vd').innerHTML='<div class="ok">Grazie! Le prepariamo la valutazione.</div>'},function(x){b.disabled=false;b.textContent='Riprova'})}}}
+function riscontro(){var d=D.d||{},es='',mot=[];
+  $('#app').innerHTML=testa()+'<div class="pad"><div style="font-size:16px">'+saluto()+'grazie per la visita'+(d.imm&&d.imm.via?' in '+e(d.imm.via):'')+'. Com\'è andata?</div><div id="rs">'
+    +[['proposta','Mi interessa, vorrei fare una proposta'],['rivedere','Vorrei rivederlo'],['pensare','Ci sto pensando'],['no','Non fa per me']].map(function(o){return '<button class="opt" data-o="'+o[0]+'">'+o[1]+'</button>'}).join('')
+    +'<div id="mt" hidden><div class="meta" style="margin:12px 0 6px">Cosa non la convince? (se vuole)</div><div class="chips">'+['Prezzo','Zona','Spazi','Stato','Piano','Altro'].map(function(m){return '<button class="chip" data-m="'+m+'">'+m+'</button>'}).join('')+'</div></div>'
+    +'<textarea id="rn" placeholder="Un commento (facoltativo)"></textarea><button class="btn b1" id="ri" disabled>Invia</button></div>'+agCard()+'</div>'+piede();
+  document.querySelectorAll('[data-o]').forEach(function(b){b.onclick=function(){es=b.getAttribute('data-o');document.querySelectorAll('[data-o]').forEach(function(x){x.className='opt'+(x===b?' on':'')});$('#mt').hidden=!(es==='pensare'||es==='no');$('#ri').disabled=false}});
+  document.querySelectorAll('[data-m]').forEach(function(b){b.onclick=function(){var m=b.getAttribute('data-m'),i=mot.indexOf(m);if(i<0)mot.push(m);else mot.splice(i,1);b.className='chip'+(mot.indexOf(m)>=0?' on':'')}});
+  $('#ri').onclick=function(){var b=this;b.disabled=true;b.textContent='Invio…';chiama('clienteRiscontro',[D.token,{esito:es,motivi:mot,nota:$('#rn').value}],function(){$('#rs').innerHTML='<div class="ok">Grazie per il suo riscontro!'+(es==='proposta'||es==='rivedere'?' '+e((D.agente&&D.agente.nome)||'L\'agente')+' la ricontatterà a breve.':'')+'</div>'},function(x){b.disabled=false;b.textContent='Riprova'})}}
 function scheda(){var d=D.d||{},f=d.foto||[];
   var gal=f.length?'<div class="gal" id="gal">'+f.map(function(x){return '<div><img src="'+VU+'" data-u="'+e(x.u)+'" alt="'+e(x.c||'')+'">'+(x.c?'<span>'+e(x.c)+'</span>':'')+'</div>'}).join('')+'</div><div class="cnt" id="cnt">1 / '+f.length+' · scorra per vedere le foto</div>':'';
   var tabs=[['descr','Descrizione',d.descr],['amb','Ambienti',(d.amb||[]).length],['car','Caratteristiche',(d.car||[]).length||d.classe],['plan','Planimetria',(d.plan||[]).length],['zona','Zona',d.mappa]].filter(function(t){return t[2]});
@@ -81,7 +123,7 @@ function corpo(d){
   if(tab==='plan')return '<div class="plan">'+(d.plan||[]).map(function(u){return '<img src="'+VU+'" data-u="'+e(u)+'" alt="Planimetria" style="min-height:120px">'}).join('')+'</div>';
   if(tab==='zona'){var m=d.mappa;return '<div class="map">'+m.t.map(function(u,i){return '<img src="'+e(u)+'" style="left:'+(i%2*128)+'px;top:'+(Math.floor(i/2)*128)+'px" alt="">'}).join('')+'<i style="left:'+(m.px-m.r)+'px;top:'+(m.py-m.r)+'px;width:'+(2*m.r)+'px;height:'+(2*m.r)+'px"></i></div><div style="text-align:center;color:#5f6880;font-size:12px;margin-top:6px">Area indicativa · © OpenStreetMap</div>'}
   return ''}
-function avvia(){stato={privacy:D.privacy};document.title=(D.d&&D.d.titolo)||'Scheda immobile';if(stato.privacy&&stato.privacy.informativa)scheda();else privacy(false)}
+function avvia(){stato={privacy:D.privacy};document.title=(D.d&&D.d.tipo==='app')?'Il nostro appuntamento':(D.d&&D.d.titolo)||'Scheda immobile';if(stato.privacy&&stato.privacy.informativa)vista();else privacy(false)}
 function fine(t,ag){$('#app').innerHTML='<div class="pad" style="max-width:480px;margin:40px auto"><h2>'+e(ag||'')+'</h2><p>'+e(t)+'</p></div>'}
 if(D)avvia();else{var K=(location.search.match(/[?&]k=([a-f0-9]+)/i)||[])[1]||'';
   $('#app').innerHTML='<div class="pad" style="color:#5f6880;text-align:center;margin-top:60px">Carico la scheda…</div>';
