@@ -37,7 +37,7 @@ textarea{width:100%;border:1.5px solid var(--li);border-radius:10px;padding:10px
 .pvl{display:flex;flex-direction:column;gap:8px;margin-top:6px}.pvl button{display:flex;align-items:center;gap:12px;width:100%;text-align:left;background:#fff;border:1.5px solid var(--li);border-radius:12px;padding:11px 12px;font:14px Arial;color:var(--fg);cursor:pointer}
 .pvl i{flex:none;width:36px;height:36px;border-radius:10px;background:#eef3fe;color:var(--nv);display:grid;place-items:center;font-style:normal;font-weight:800}.pvl b{display:block;font-size:15px}.pvl small{color:var(--mu);font-size:12.5px}.pvl em{margin-left:auto;color:var(--mu);font-style:normal;font-size:18px}
 .indi{background:none;border:0;color:var(--bl);font:700 14px Arial;cursor:pointer;padding:0}
-.tb{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}.tb td{padding:8px 0;border-bottom:1px solid var(--li);vertical-align:top}.tb td:last-child{text-align:right;font-weight:700;white-space:nowrap;padding-left:10px}.tb tr.tot td{font-weight:800;border-bottom:0}
+.tb{width:100%;border-collapse:collapse;font-size:14px;margin:8px 0}.tb td{padding:8px 0;border-bottom:1px solid var(--li);vertical-align:top}.tb td:last-child{text-align:right;white-space:nowrap;padding-left:10px}.tb tr.tot td{font-weight:800;border-bottom:0}
 .tb th{text-align:right;font-size:12px;color:var(--mu);padding:4px 0 4px 10px}.tb th:first-child{text-align:left;padding-left:0}.tb td+td{text-align:right}
 .num3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}.num3 div{background:var(--so);border-radius:12px;text-align:center;padding:10px 4px}.num3 b{display:block;font-size:22px;color:var(--nv)}.num3 small{color:var(--mu);font-size:12px}
 .lst{margin:6px 0 0;padding-left:20px}.lst li{margin:4px 0}.h3{font-weight:800;font-size:16px;margin:18px 0 4px}
@@ -126,19 +126,22 @@ function pkVoce(k){var p=(D.d||{}).pk||{},h='';scrollTo(0,0);
         +'<tr class="tot"><td>Totale imposte</td>'+col.map(function(c){var v=im[c[0]];return '<td>'+(v?eu((v.iva||0)+v.registro+v.ipotecaria+v.catastale):'–')+'</td>'}).join('')+'</tr></table>'
         +'<p class="meta">'+(x.venditore==='impresa'?'Vende un\'impresa con IVA: l\'IVA si calcola sul prezzo.':'Vende un privato: le imposte si calcolano sul valore catastale, non sul prezzo.')+(im.lusso?' Immobile di lusso: niente agevolazione prima casa.':'')+'</p>'}
     else h+='<div class="h3">Imposte</div><p>Dipendono dai dati catastali dell\'immobile: gliele calcoliamo noi prima della proposta.</p>';
-    var n=x.notaio,iv=function(v){return Math.round(v*1.22)};
-    if(n){var on=n.min&&n.max&&n.min!==n.max?'da '+eu(iv(n.min))+' a '+eu(iv(n.max)):(n.max||n.min)?eu(iv(n.max||n.min)):'';
-      h+='<div class="h3">Notaio</div><table class="tb">'+(on?'<tr><td>Onorario, IVA compresa</td><td>'+on+'</td></tr>':'')+(n.spese?'<tr><td>Spese anticipate dal notaio<br><small class="meta">bolli, trascrizione, voltura, archivio</small></td><td>'+eu(n.spese)+'</td></tr>':'')+'</table>'
-        +(n.mutuo||n.speseMutuo?'<div class="h3">Se fa un mutuo</div><table class="tb"><tr><td>Atto di mutuo dal notaio, IVA e spese comprese</td><td>'+eu(iv(n.mutuo)+n.speseMutuo)+'</td></tr></table><p class="meta">Più le spese della banca (istruttoria, perizia) e l\'imposta sul mutuo.</p>':'')}
+    /* notaio e mutuo non dipendono da noi: cifre tonde e "circa" */
+    var n=x.notaio,iv=function(v){return v*1.22},t50=function(v){return Math.round(v/50)*50};
+    if(n){var on=n.min&&n.max&&n.min!==n.max?'circa da '+eu(t50(iv(n.min)))+' a '+eu(t50(iv(n.max))):(n.max||n.min)?'circa '+eu(t50(iv(n.max||n.min))):'';
+      h+='<div class="h3">Notaio</div><table class="tb">'+(on?'<tr><td>Onorario, IVA compresa</td><td>'+on+'</td></tr>':'')+(n.spese?'<tr><td>Spese anticipate dal notaio<br><small class="meta">bolli, trascrizione, voltura, archivio</small></td><td>circa '+eu(t50(n.spese))+'</td></tr>':'')+'</table><p class="meta">Indicativo: dipende dal notaio.</p>'
+        +(n.mutuo||n.speseMutuo?'<div class="h3">Se fa un mutuo</div><table class="tb"><tr><td>Atto di mutuo dal notaio, IVA e spese comprese</td><td>circa '+eu(t50(iv(n.mutuo)+n.speseMutuo))+'</td></tr></table><p class="meta">Indicativo. Più le spese della banca (istruttoria, perizia) e l\'imposta sul mutuo.</p>':'')}
     h+='<div class="box meta">Importi indicativi, calcolati sul prezzo richiesto. Il conteggio preciso lo fa il notaio; noi l\'aiutiamo a stimarlo prima della proposta.</div>'}
   if(k==='ape'){var a=p.ape||{},cl={'A4':'#0b8a3e','A3':'#0b8a3e','A2':'#2aa84a','A1':'#47b54b','A':'#2aa84a','B':'#8cc63f','C':'#d4d42a','D':'#f2c21b','E':'#f28c1b','F':'#e2531e','G':'#c9161d'};
     h=pkTesta('Attestato energetico')+(a.esente?'<p>L\'immobile è esente dall\'attestato di prestazione energetica.</p>':'<div class="box" style="display:flex;align-items:center"><span class="ape" style="background:'+(cl[String(a.classe).toUpperCase()]||'#5f6880')+'">'+e(a.classe)+'</span><div><b>Classe energetica '+e(a.classe)+'</b>'+(a.ipe?'<div class="meta">'+e(a.ipe)+' kWh/m² anno</div>':'')+'</div></div><p class="meta">Più la lettera è vicina alla A, meno consuma la casa.</p>')}
   if(k==='prop'){h=pkTesta('Proposta d\'acquisto')+'<p>È il modulo che firmerà se decide di fare una proposta, con i dati dell\'immobile già scritti. Proprietari e prezzo restano vuoti: li compileremo insieme.</p><div id="pdfb" class="box meta">Preparo il modulo…</div>';
     $('#app').innerHTML=h+'<button class="btn b2" onclick="indietro()">Torna all\'appuntamento</button>'+agCard()+'</div>'+piede();propostaPdf(p.prop);return}
-  if(k==='plan')h=pkTesta('Planimetria')+'<div class="plan">'+(p.plan||[]).map(function(u){return '<img src="'+VU+'" data-u="'+e(u)+'" alt="Planimetria" style="min-height:120px">'}).join('')+'</div>';
+  if(k==='plan')h=pkTesta('Planimetria')+'<div class="plan">'+(p.plan||[]).map(function(u,i){return '<img src="'+VU+'" data-u="'+e(u)+'" alt="Planimetria" style="min-height:120px"><button class="btn b2" data-dlp="'+i+'">Scarica la planimetria</button>'}).join('')+'</div>';
   if(k==='doc'){var r=String(p.doc||'').split('\n'),out='',ap=false;r.forEach(function(x){x=x.trim();if(!x){if(ap){out+='</ul>';ap=false}return}if(/:$/.test(x)){if(ap){out+='</ul>';ap=false}out+='<div class="h3">'+e(x.slice(0,-1))+'</div>';return}if(!ap){out+='<ul class="lst">';ap=true}out+='<li>'+e(x.replace(/^[-•·]\s*/,''))+'</li>'});if(ap)out+='</ul>';
     h=pkTesta('Documenti da preparare')+out}
-  $('#app').innerHTML=h+'<button class="btn b2" onclick="indietro()">Torna all\'appuntamento</button>'+agCard()+'</div>'+piede();foto(true)}
+  $('#app').innerHTML=h+'<button class="btn b2" onclick="indietro()">Torna all\'appuntamento</button>'+agCard()+'</div>'+piede();foto(true);
+  document.querySelectorAll('[data-dlp]').forEach(function(b){b.onclick=function(){var u=(p.plan||[])[+b.getAttribute('data-dlp')],s=FC[u];if(!s){b.textContent='Un attimo, la sto caricando…';setTimeout(function(){b.textContent='Scarica la planimetria'},2500);return}
+    var a=document.createElement('a');a.href=s;a.download='Planimetria'+((p.plan||[]).length>1?' '+(+b.getAttribute('data-dlp')+1):'')+(/png/.test(s.slice(0,30))?'.png':'.jpg');document.body.appendChild(a);a.click();a.remove()}})}
 /* il modulo vero (PDF dell'agenzia) con i dati scritti sopra e "FAC-SIMILE" su ogni pagina; si costruisce qui, nel telefono */
 var PDFURL='';
 function propostaPdf(pr){var box=$('#pdfb');if(PDFURL){mostraPdf(box);return}
