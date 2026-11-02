@@ -202,7 +202,7 @@ function corpo(d){
   if(tab==='plan')return '<div class="plan">'+(d.plan||[]).map(function(u){return '<img src="'+VU+'" data-u="'+e(u)+'" alt="Planimetria" style="min-height:120px">'}).join('')+'</div>';
   if(tab==='zona'){var m=d.mappa;return '<div class="map">'+m.t.map(function(u,i){return '<img src="'+e(u)+'" style="left:'+(i%2*128)+'px;top:'+(Math.floor(i/2)*128)+'px" alt="">'}).join('')+'<i style="left:'+(m.px-m.r)+'px;top:'+(m.py-m.r)+'px;width:'+(2*m.r)+'px;height:'+(2*m.r)+'px"></i></div><div style="text-align:center;color:#5f6880;font-size:12px;margin-top:6px">Area indicativa · © OpenStreetMap</div>'}
   return ''}
-function avvia(){stato={privacy:D.privacy};document.title=(D.d&&D.d.tipo==='app')?'Il nostro appuntamento':(D.d&&D.d.titolo)||'Scheda immobile';if(stato.privacy&&stato.privacy.informativa)vista();else privacy(false)}
+function avvia(){if(D.d&&D.d.tipo==='rec'&&/^https:\/\/[^\s<>"]+$/.test(D.d.url||'')){location.replace(D.d.url);return}stato={privacy:D.privacy};document.title=(D.d&&D.d.tipo==='app')?'Il nostro appuntamento':(D.d&&D.d.titolo)||'Scheda immobile';if(stato.privacy&&stato.privacy.informativa)vista();else privacy(false)}
 function fine(t,ag){$('#app').innerHTML='<div class="pad" style="max-width:480px;margin:40px auto"><h2>'+e(ag||'')+'</h2><p>'+e(t)+'</p></div>'}
 if(D)avvia();else{var K=(location.search.match(/[?&]k=([A-Za-z0-9]+)/)||[])[1]||'';
   $('#app').innerHTML='<div class="pad" style="color:#5f6880;text-align:center;margin-top:60px">Carico la scheda…</div>';
