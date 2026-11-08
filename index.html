@@ -4,7 +4,7 @@
 *{box-sizing:border-box}html,body{margin:0;background:#fff;color:var(--fg);font:15px/1.5 Arial,Helvetica,sans-serif}
 .w{max-width:760px;margin:0 auto}
 .top{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;border-bottom:1px solid var(--li)}
-.top img{max-height:46px;max-width:200px;display:block}.top b{color:var(--nv);font-size:17px}.rif{color:var(--mu);font-size:12.5px;text-align:right}
+.top img{max-height:58px;max-width:200px;display:block}.top b{color:var(--nv);font-size:17px}.rif{color:var(--mu);font-size:12.5px;text-align:right}
 .pad{padding:16px}
 h1{font-size:21px;line-height:1.25;margin:0 0 4px}.loc{font-weight:700;font-size:13.5px;letter-spacing:.03em;text-transform:uppercase;color:var(--nv)}
 .pz{font-weight:800;font-size:24px;color:var(--nv);margin:6px 0 4px}
@@ -44,7 +44,7 @@ textarea{width:100%;border:1.5px solid var(--li);border-radius:10px;padding:10px
 .ape{display:inline-grid;place-items:center;width:64px;height:64px;border-radius:14px;color:#fff;font-weight:800;font-size:30px;margin-right:12px}
 </style></head><body><div class="w" id="app"></div>
 <script>
-var D=/*DATI*/null,API='https://script.google.com/macros/s/AKfycby9Cq9WauFadqGQ00uPIv1dknVyWEnSvXnDMSeqMU2_pQPhJc_MRssHIsKxyf1eLJD8/exec';
+var D=/*DATI*/null,API='https://script.google.com/macros/s/AKfycby9Cq9WauFadqGQ00uPIv1dknVyWEnSvXnDMSeqMU2_pQPhJc_MRssHIsKxyf1eLJD8/exec',LOGO='https://giuseppescozia.github.io/cmon-pagine/logo.jpg';
 function chiama(fn,args,ok,ko){ko=ko||function(){};
   if(window.google&&google.script&&google.script.run){var r=google.script.run.withSuccessHandler(ok).withFailureHandler(ko);r[fn].apply(r,args);return}
   var p=fn==='clienteFoto'?fetch(API+'?api=foto&k='+encodeURIComponent(args[0])+'&u='+encodeURIComponent(JSON.stringify(args[1])),{credentials:'omit'})
@@ -59,7 +59,8 @@ function fotoGiro(){while(FN<3&&FQ.length){var b=FQ.splice(0,3);FN++;chiama('cli
 function e(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function $(q){return document.querySelector(q)}
 var tab='descr',stato={privacy:D?D.privacy:null};
-function testa(){var d=CUR||D.d||{},r=d.rif||(d.imm&&d.imm.rif)||'';return '<div class="top">'+(D.logo?'<img src="'+D.logo+'" alt="'+e(D.agenzia)+'">':'<b>'+e(D.agenzia)+'</b>')+(CUR?'<button class="indi" onclick="indietro()">← indietro</button>':r?'<div class="rif">Riferimento<br><b style="color:#16203f;font-size:14px">'+e(r)+'</b></div>':'')+'</div>'}
+function logoV(){return D.logo||(LOGO.indexOf('/*')<0?LOGO:'')}
+function testa(){var d=CUR||D.d||{},r=d.rif||(d.imm&&d.imm.rif)||'';return '<div class="top">'+(logoV()?'<img src="'+logoV()+'" alt="'+e(D.agenzia)+'">':'<b>'+e(D.agenzia)+'</b>')+(CUR?'<button class="indi" onclick="indietro()">← indietro</button>':r?'<div class="rif">Riferimento<br><b style="color:#16203f;font-size:14px">'+e(r)+'</b></div>':'')+'</div>'}
 function piede(){return '<div class="foot">'+e(D.agenzia)+(stato.privacy&&stato.privacy.informativa?' · <button onclick="privacy(true)">Le sue scelte sulla privacy</button>':'')+'</div>'}
 function privacy(rivedi){var p=stato.privacy||{},d=D.d||{};
   $('#app').innerHTML=testa()+'<div class="pad"><div style="font-weight:800;font-size:18px;margin-bottom:4px">'+(D.nome?'Buongiorno '+e(String(D.nome).split(' ')[0].charAt(0)+String(D.nome).split(' ')[0].slice(1).toLowerCase()):'Buongiorno')+'</div>'
@@ -107,7 +108,7 @@ function pkLista(d){var p=d.pk;if(!p)return '';var l=[];
   if((p.plan||[]).length)l.push(['plan','▦','Planimetria','']);if(p.doc)l.push(['doc','✓','Documenti da preparare','se decide di fare una proposta']);
   if(!l.length)return '';return '<div class="h3">Prima della visita</div><div class="pvl">'+l.map(function(x){return '<button data-pv="'+x[0]+'"><i>'+e(x[1])+'</i><span><b>'+e(x[2])+'</b>'+(x[3]?'<small>'+e(x[3])+'</small>':'')+'</span><em>›</em></button>'}).join('')+'</div>'}
 function indietro(){CUR=null;appunt();scrollTo(0,0)}
-function pkTesta(t){return '<div class="top">'+(D.logo?'<img src="'+D.logo+'" alt="'+e(D.agenzia)+'">':'<b>'+e(D.agenzia)+'</b>')+'<button class="indi" onclick="indietro()">← indietro</button></div><div class="pad"><h1>'+e(t)+'</h1>'}
+function pkTesta(t){return '<div class="top">'+(logoV()?'<img src="'+logoV()+'" alt="'+e(D.agenzia)+'">':'<b>'+e(D.agenzia)+'</b>')+'<button class="indi" onclick="indietro()">← indietro</button></div><div class="pad"><h1>'+e(t)+'</h1>'}
 function pkVoce(k){var p=(D.d||{}).pk||{},h='';scrollTo(0,0);
   if(k==='sc'){CUR=p.sc;tab='descr';scheda();return}
   if(k==='chi'){var c=D.chi||{},anni=c.anno?(new Date().getFullYear()-Number(c.anno)):0,sedi=String(c.sedi||'').split('\n').filter(function(x){return x.trim()}),serv=String(c.servizi||'').split('\n').filter(function(x){return x.trim()});
