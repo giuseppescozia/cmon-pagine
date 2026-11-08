@@ -26,7 +26,7 @@ h1{font-size:21px;line-height:1.25;margin:0 0 4px}.loc{font-weight:700;font-size
 .err{background:#fde9eb;color:#9b1020;border-radius:12px;padding:12px;margin-top:10px}
 .foot{color:var(--mu);font-size:12px;text-align:center;padding:20px 16px 30px}.foot button{background:none;border:0;color:var(--bl);font:inherit;text-decoration:underline;cursor:pointer}
 textarea{width:100%;border:1.5px solid var(--li);border-radius:10px;padding:10px;font:14px Arial;min-height:70px}
-.map{position:relative;width:256px;height:256px;border-radius:10px;overflow:hidden;margin:0 auto}.map img{position:absolute;width:128px;height:128px}.map i{position:absolute;border-radius:50%;background:rgba(29,79,216,.2);border:2px solid rgba(29,79,216,.65)}
+.lmap{height:300px;border-radius:10px;overflow:hidden;z-index:0}.map{position:relative;width:256px;height:256px;border-radius:10px;overflow:hidden;margin:0 auto}.map img{position:absolute;width:128px;height:128px}.map i{position:absolute;border-radius:50%;background:rgba(29,79,216,.2);border:2px solid rgba(29,79,216,.65)}
 .plan img{width:100%;border:1px solid var(--li);border-radius:8px;margin-top:8px;background:#fff}
 .box{background:var(--so);border-radius:12px;padding:14px;margin:12px 0}.when{font-weight:800;font-size:18px}.meta{color:var(--mu);font-size:13px}
 .lnk{display:inline-block;margin-top:8px;color:var(--bl);font-weight:700;text-decoration:none}
@@ -189,8 +189,8 @@ function scheda(){var d=CUR||D.d||{},f=d.foto||[];
    +(tabs.length?'<div class="tabs">'+tabs.map(function(t){return '<button data-t="'+t[0]+'" class="'+(t[0]===tab?'on':'')+'">'+t[1]+'</button>'}).join('')+'</div><div id="corpo">'+corpo(d)+'</div>':'')
    +(CUR?'<button class="btn b2" onclick="indietro()">Torna all\'appuntamento</button>':'<div id="int" class="int2"><button class="btn b2" data-i="si">Mi interessa</button><button class="btn b2" data-i="no">Non fa per me</button></div><div id="vis"><button class="btn b1" id="visita">Vorrei visitarlo</button></div>')
    +'<div class="ag">'+(ag.foto?'<img src="'+ag.foto+'" alt="">':'<div class="av">'+e(String(ag.nome||'?').split(' ').map(function(x){return x.charAt(0)}).slice(0,2).join(''))+'</div>')+'<div><b>'+e(ag.nome)+'</b><div style="color:#5f6880;font-size:13px">'+e(D.agenzia)+'</div><div style="margin-top:4px">'+(tel?'<a href="tel:+'+(tel.indexOf('39')===0?tel:'39'+tel)+'">Chiama</a><a href="'+wa+'" target="_blank" rel="noopener">WhatsApp</a>':'')+(ag.mail?'<a href="mailto:'+e(ag.mail)+'">Mail</a>':'')+'</div></div></div></div>'+piede();
-  document.querySelectorAll('[data-t]').forEach(function(b){b.onclick=function(){tab=b.getAttribute('data-t');document.querySelectorAll('[data-t]').forEach(function(x){x.className=x===b?'on':''});$('#corpo').innerHTML=corpo(d);foto(true)}});
-  foto();fotoDopo();var g=$('#gal');if(g)g.addEventListener('scroll',function(){var i=Math.round(g.scrollLeft/g.clientWidth)+1;$('#cnt').textContent=i+' / '+f.length},{passive:true});
+  document.querySelectorAll('[data-t]').forEach(function(b){b.onclick=function(){tab=b.getAttribute('data-t');document.querySelectorAll('[data-t]').forEach(function(x){x.className=x===b?'on':''});$('#corpo').innerHTML=corpo(d);foto(true);mappaViva(d)}});
+  foto();fotoDopo();mappaViva(d);var g=$('#gal');if(g)g.addEventListener('scroll',function(){var i=Math.round(g.scrollLeft/g.clientWidth)+1;$('#cnt').textContent=i+' / '+f.length},{passive:true});
   if(CUR)return;document.querySelectorAll('[data-i]').forEach(function(b){b.onclick=function(){var v=b.getAttribute('data-i');document.querySelectorAll('[data-i]').forEach(function(x){x.disabled=true});b.textContent='Un momento…';
     chiama('clienteInteresse',[D.token,v],function(){$('#int').innerHTML='<div class="ok">'+(v==='si'?'Grazie! '+e(ag.nome||'L\'agente')+' la contatterà per proporle la visita.':'Grazie, ne terremo conto: non le manderemo più questo immobile.')+'</div>'},
       function(x){document.querySelectorAll('[data-i]').forEach(function(y){y.disabled=false});b.textContent=v==='si'?'Mi interessa':'Non fa per me';$('#int').insertAdjacentHTML('beforeend','<div class="err">'+e(x.message||x)+'</div>')})}});
@@ -198,12 +198,23 @@ function scheda(){var d=CUR||D.d||{},f=d.foto||[];
     $('#manda').onclick=function(){var b=this;b.disabled=true;b.textContent='Invio…';
       chiama('clienteVisita',[D.token,$('#vn').value],function(){$('#vis').innerHTML='<div class="ok">Grazie! '+e(ag.nome||'L\'agente')+' la ricontatterà per fissare la visita.</div>'},
         function(x){b.disabled=false;b.textContent='Riprova';$('#vm').innerHTML='<div class="err">'+e(x.message||x)+'</div>'})}}}
+/* zona: mappa vera (si sposta e si ingrandisce) con l'area indicativa; se la mappa non si carica resta l'immagine */
+function mappaViva(d){var m=d.mappa,el=$('#lmap');if(!el||!m||!m.c)return;
+  var vai=function(){try{var L=window.L,mp=L.map(el,{scrollWheelZoom:false,tap:true}).setView(m.c,15);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(mp);
+    if(m.esatta)L.circleMarker(m.c,{radius:9,color:'#fff',weight:3,fillColor:'#d6192b',fillOpacity:1}).addTo(mp);else L.circle(m.c,{radius:220,color:'#d6192b',weight:2,fillColor:'#d6192b',fillOpacity:.18}).addTo(mp)}catch(x){statica()}};
+  var statica=function(){var dd={};for(var k in d)dd[k]=d[k];dd.mappa={t:m.t,px:m.px,py:m.py,r:m.r};el.outerHTML=corpoZonaStatica(dd.mappa)};
+  if(window.L){vai();return}
+  if(!document.getElementById('lcss')){var c=document.createElement('link');c.id='lcss';c.rel='stylesheet';c.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css';document.head.appendChild(c)}
+  var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js';s.onload=function(){if($('#lmap'))vai()};s.onerror=statica;document.head.appendChild(s)}
+function corpoZonaStatica(m){return '<div class="map">'+m.t.map(function(u,i){return '<img src="'+e(u)+'" style="left:'+(i%2*128)+'px;top:'+(Math.floor(i/2)*128)+'px" alt="">'}).join('')+'<i style="left:'+(m.px-m.r)+'px;top:'+(m.py-m.r)+'px;width:'+(2*m.r)+'px;height:'+(2*m.r)+'px"></i></div>'}
 function corpo(d){
   if(tab==='descr')return '<div style="white-space:pre-line">'+e(d.descr)+'</div>';
   if(tab==='amb')return '<div class="amb">'+(d.amb||[]).map(function(x){return '<div><img src="'+VU+'" data-u="'+e(x.u)+'" alt=""><small>'+e(x.c||'')+'</small></div>'}).join('')+'</div>';
   if(tab==='car')return '<div class="car">'+(d.car||[]).map(function(x){return '<div><span>'+e(x[0])+'</span><b>'+e(x[1])+'</b></div>'}).join('')+'</div>'+((d.chips||[]).length?'<p style="font-size:14px"><span style="color:#5f6880">Dotazioni:</span> '+e(d.chips.join(' · '))+'</p>':'')+(d.classe?'<p style="font-size:14px"><span style="color:#5f6880">Classe energetica:</span> <b>'+e(d.classe)+'</b>'+(d.ipe?' · '+e(d.ipe)+' kWh/m² anno':'')+'</p>':'');
   if(tab==='plan')return '<div class="plan">'+(d.plan||[]).map(function(u){return '<img src="'+VU+'" data-u="'+e(u)+'" alt="Planimetria" style="min-height:120px">'}).join('')+'</div>';
-  if(tab==='zona'){var m=d.mappa;return '<div class="map">'+m.t.map(function(u,i){return '<img src="'+e(u)+'" style="left:'+(i%2*128)+'px;top:'+(Math.floor(i/2)*128)+'px" alt="">'}).join('')+'<i style="left:'+(m.px-m.r)+'px;top:'+(m.py-m.r)+'px;width:'+(2*m.r)+'px;height:'+(2*m.r)+'px"></i></div><div style="text-align:center;color:#5f6880;font-size:12px;margin-top:6px">Area indicativa · © OpenStreetMap</div>'}
+  if(tab==='zona'){var m=d.mappa;if(m.c)return '<div id="lmap" class="lmap"></div><div style="display:flex;justify-content:space-between;gap:8px;color:#5f6880;font-size:12px;margin-top:6px"><span>'+(m.esatta?'Posizione dell\'immobile':'Area indicativa: l\'indirizzo esatto glielo comunichiamo noi')+'</span><a href="https://www.openstreetmap.org/#map=16/'+m.c[0]+'/'+m.c[1]+'" target="_blank" rel="noopener" style="color:#1d4fd8">Apri la mappa</a></div>';
+    return '<div class="map">'+m.t.map(function(u,i){return '<img src="'+e(u)+'" style="left:'+(i%2*128)+'px;top:'+(Math.floor(i/2)*128)+'px" alt="">'}).join('')+'<i style="left:'+(m.px-m.r)+'px;top:'+(m.py-m.r)+'px;width:'+(2*m.r)+'px;height:'+(2*m.r)+'px"></i></div><div style="text-align:center;color:#5f6880;font-size:12px;margin-top:6px">Area indicativa · © OpenStreetMap</div>'}
   return ''}
 function avvia(){if(D.d&&D.d.tipo==='rec'&&/^https:\/\/[^\s<>"]+$/.test(D.d.url||'')){location.replace(D.d.url);return}stato={privacy:D.privacy};document.title=(D.d&&D.d.tipo==='app')?'Il nostro appuntamento':(D.d&&D.d.titolo)||'Scheda immobile';if(stato.privacy&&stato.privacy.informativa)vista();else privacy(false)}
 function fine(t,ag){$('#app').innerHTML='<div class="pad" style="max-width:480px;margin:40px auto"><h2>'+e(ag||'')+'</h2><p>'+e(t)+'</p></div>'}
