@@ -1,0 +1,61 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Valutazione</title>
+<style>
+:root{--fg:#16203f;--mu:#5f6880;--li:#e3e7f0;--nv:#13286b;--rd:#d6192b;--bl:#1d4fd8;--gr:#139a55;--so:#f4f6fb}
+*{box-sizing:border-box}html,body{margin:0;background:#fff;color:var(--fg);font:16px/1.5 Arial,Helvetica,sans-serif}
+.w{max-width:560px;margin:0 auto;padding:0 18px 40px}
+.top{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--li);margin-bottom:18px}.top img{max-height:52px;max-width:180px}.top b{font-size:15px}
+h1{font-size:25px;line-height:1.2;margin:6px 0 10px;color:var(--nv)}h2{font-size:21px;line-height:1.25;margin:4px 0 10px;color:var(--nv)}
+p{margin:0 0 12px}.mu{color:var(--mu);font-size:14px}
+.bar{height:6px;background:var(--li);border-radius:3px;margin:4px 0 18px;overflow:hidden}.bar i{display:block;height:100%;background:var(--rd);transition:width .3s}
+.opz{display:flex;flex-direction:column;gap:10px;margin:12px 0}
+.opz button,.btn{font:inherit;font-size:17px;border:1.5px solid var(--li);background:#fff;border-radius:12px;padding:14px 16px;text-align:left;cursor:pointer;color:var(--fg)}
+.opz button:hover,.opz button:focus-visible{border-color:var(--bl);outline:none}
+.btn.pr{background:var(--rd);border-color:var(--rd);color:#fff;text-align:center;font-weight:700;width:100%}
+.btn.pr:disabled{opacity:.6}
+label.f{display:block;font-size:14px;color:var(--mu);margin:12px 0 4px}
+input[type=text],input[type=tel],input[type=email]{width:100%;font:inherit;font-size:17px;border:1.5px solid var(--li);border-radius:10px;padding:12px}
+input:focus{border-color:var(--bl);outline:none}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:16px 0;font-size:14px}.chk input{width:22px;height:22px;flex:none;margin-top:1px}
+details{font-size:13px;color:var(--mu);margin:6px 0 14px}details div{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--li);border-radius:8px;padding:10px;margin-top:6px}
+.err{color:var(--rd);font-size:14px;min-height:20px;margin:6px 0}
+.ok{background:#e9f7ef;border-radius:12px;padding:16px;margin:12px 0}
+.cond{font-size:13px;color:var(--mu);border-top:1px solid var(--li);margin-top:24px;padding-top:12px;white-space:pre-wrap}
+.ind{border:0;background:none;color:var(--mu);font:inherit;font-size:14px;padding:6px 0;cursor:pointer}
+</style></head><body><div class="w" id="app"><p class="mu" style="margin-top:40px">Caricamento…</p></div>
+<script>
+var API='https://script.google.com/macros/s/AKfycby9Cq9WauFadqGQ00uPIv1dknVyWEnSvXnDMSeqMU2_pQPhJc_MRssHIsKxyf1eLJD8/exec',LOGO='https://giuseppescozia.github.io/cmon-pagine/logo.jpg';
+var Q=new URLSearchParams(location.search),TOK=Q.get('c')||'',S={i:-1,ris:[],comune:''},C=null,X=null;
+var app=document.getElementById('app');
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function testa(){var l=(X&&X.logo)||(LOGO.indexOf('/*')<0?LOGO:'');return '<div class="top">'+(l?'<img src="'+esc(l)+'" alt="">':'')+'<b>'+esc(X&&X.agenzia||'')+'</b></div>'}
+function fine(t){app.innerHTML=testa()+'<p style="margin-top:30px">'+esc(t)+'</p>'}
+function post(api,a){return fetch(API,{method:'POST',credentials:'omit',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({api:api,c:TOK,a:a})}).then(function(r){return r.json()}).then(function(o){if(o.errore)throw new Error(o.errore);return JSON.parse(o.r)})}
+var N=0;function tot(){return (C.domande||[]).length+2}
+function barra(){return '<div class="bar"><i style="width:'+Math.round(100*(S.i+1)/tot())+'%"></i></div>'}
+function inizio(){S.i=-1;app.innerHTML=testa()+'<h1>'+esc(C.titolo)+'</h1>'+(C.sotto?'<p>'+esc(C.sotto)+'</p>':'')+'<p class="mu">Il test richiede circa un minuto.</p><button class="btn pr" id="go">Inizia</button>'+(C.condizioni?'<div class="cond">'+esc(C.condizioni)+'</div>':'');
+  document.getElementById('go').onclick=function(){S.i=0;comune()}}
+function comune(){var A=C.ammessi||[];app.innerHTML=testa()+barra()+'<h2>In che comune è la casa?</h2><input type="text" id="cm" list="cml" autocomplete="off" placeholder="Scrivi il comune" value="'+esc(S.comune)+'"><datalist id="cml">'+A.map(function(x){return '<option value="'+esc(x)+'">'}).join('')+'</datalist><div class="err" id="er"></div><button class="btn pr" id="av">Avanti</button>';
+  var i=document.getElementById('cm');i.focus();document.getElementById('av').onclick=function(){var v=i.value.trim().toUpperCase();if(v.length<2){document.getElementById('er').textContent='Scrivi il comune';return}S.comune=v;S.i=1;domanda()}}
+function domanda(){var k=S.i-1,q=(C.domande||[])[k];if(!q)return contatti();
+  app.innerHTML=testa()+barra()+'<h2>'+esc(q.t)+'</h2><div class="opz">'+(q.opz||[]).map(function(o,j){return '<button data-j="'+j+'">'+esc(o)+'</button>'}).join('')+'</div><button class="ind" id="ind">← Indietro</button>';
+  app.querySelectorAll('[data-j]').forEach(function(b){b.onclick=function(){S.ris[k]=[q.t,q.opz[+b.dataset.j]];S.i++;domanda()}});
+  document.getElementById('ind').onclick=function(){S.i--;if(S.i<1)comune();else domanda()}}
+function contatti(){S.i=tot()-1;app.innerHTML=testa()+barra()+'<h2>Dove ti contattiamo?</h2><label class="f" for="nm">Nome e cognome</label><input type="text" id="nm" autocomplete="name"><label class="f" for="tl">Telefono</label><input type="tel" id="tl" autocomplete="tel"><label class="f" for="ml">Mail</label><input type="email" id="ml" autocomplete="email">'+
+  '<label class="chk"><input type="checkbox" id="pv"><span>Ho letto l\'informativa sul trattamento dei dati personali.</span></label>'+(X.informativa?'<details><summary>Leggi l\'informativa</summary><div>'+esc(X.informativa)+'</div></details>':'')+'<div class="err" id="er"></div><button class="btn pr" id="inv">Invia</button><button class="ind" id="ind">← Indietro</button>';
+  document.getElementById('ind').onclick=function(){S.i=tot()-2;if(S.i<1)comune();else domanda()};
+  document.getElementById('inv').onclick=function(){var b=this,er=document.getElementById('er'),v=function(id){return document.getElementById(id).value.trim()};
+    if(v('nm').length<3){er.textContent='Scrivi nome e cognome';return}if(v('tl').replace(/\D/g,'').length<8){er.textContent='Controlla il numero di telefono';return}
+    if(!document.getElementById('pv').checked){er.textContent='Serve la presa visione dell\'informativa';return}
+    b.disabled=true;er.textContent='';post('campagnaInvia',[{comune:S.comune,risposte:S.ris.filter(Boolean),nome:v('nm'),tel:v('tl'),mail:v('ml'),privacy:true}]).then(function(r){S.ref=r.ref;if(!r.area)fuori();else dopo()}).catch(function(e){b.disabled=false;er.textContent=e.message})}}
+function riapre(){if(!X.chiusa)return '';var d=new Date(X.chiusa.al+'T12:00:00');d.setDate(d.getDate()+1);while(d.getDay()===0||d.getDay()===6)d.setDate(d.getDate()+1);
+  return '<p>In questi giorni l\'agenzia è chiusa: ti chiamiamo dal '+d.toLocaleDateString('it-IT',{weekday:'long',day:'numeric',month:'long'})+'.</p>'}
+function fuori(){app.innerHTML=testa()+'<h2>Grazie per aver fatto il test</h2><p>Al momento lavoriamo solo in alcune zone e il comune che hai indicato non è tra queste, quindi non possiamo aiutarti per questo immobile.</p><p class="mu">Se hai un altro immobile in zona, puoi rifare il test.</p><button class="btn" id="rif">Rifai il test</button>';
+  document.getElementById('rif').onclick=function(){S={i:-1,ris:[],comune:''};inizio()}}
+function dopo(){if(C.offerta==='nessuna')return grazie(false);
+  app.innerHTML=testa()+'<h2>'+esc(C.offertaTit||'Buone notizie')+'</h2><p>'+esc(C.offertaTesto||'')+'</p><button class="btn pr" id="oto">Richiedi ora la sessione gratuita</button><button class="ind" id="no">No grazie</button>';
+  document.getElementById('oto').onclick=function(){var b=this;b.disabled=true;post('campagnaOto',[S.ref]).then(function(){grazie(true)}).catch(function(e){b.disabled=false;alert(e.message)})};
+  document.getElementById('no').onclick=function(){grazie(false)}}
+function grazie(oto){app.innerHTML=testa()+'<div class="ok"><h2>'+(oto?'Richiesta ricevuta':'Grazie, abbiamo ricevuto il test')+'</h2>'+(X.chiusa?riapre():'<p>'+(oto?'Ti chiamiamo al più presto per fissare giorno e ora.':'Ti contattiamo nei prossimi giorni.')+'</p>')+'</div>'}
+if(!/^[a-f0-9]{24}$/.test(TOK))fine('Link non valido.');
+else fetch(API+'?api=campagna&c='+TOK,{credentials:'omit'}).then(function(r){return r.json()}).then(function(o){X=o;if(o.errore)return fine(o.errore);C=o.c;document.title=C.titolo||'Valutazione';inizio()}).catch(function(){fine('Pagina non disponibile in questo momento. Riprova tra poco.')});
+</script></body></html>
