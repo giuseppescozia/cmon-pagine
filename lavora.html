@@ -1,0 +1,41 @@
+<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lavora con noi</title>
+<style>
+:root{--fg:#16203f;--mu:#5f6880;--li:#e3e7f0;--nv:#13286b;--rd:#d6192b;--bl:#1f3fa8;--so:#f4f6fb}
+*{box-sizing:border-box}html,body{margin:0;background:#fff;color:var(--fg);font:16px/1.5 Arial,Helvetica,sans-serif}
+.w{max-width:560px;margin:0 auto;padding:0 18px 40px}
+.top{display:flex;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid var(--li);margin-bottom:18px}.top img{max-height:56px;max-width:180px}.top b{font-size:15px}
+.hero{background:var(--bl);color:#fff;border-radius:14px;padding:18px;margin:0 0 18px}.hero small{letter-spacing:.12em;font-weight:700;color:#ffd0d4;font-size:12px}
+h1{font-size:25px;line-height:1.2;margin:6px 0 8px}h2{font-size:21px;line-height:1.25;margin:4px 0 10px;color:var(--nv)}
+p{margin:0 0 12px}.mu{color:var(--mu);font-size:14px}
+.btn{font:inherit;font-size:17px;border:1.5px solid var(--li);background:#fff;border-radius:12px;padding:14px 16px;cursor:pointer;color:var(--fg)}
+.btn.pr{background:var(--rd);border-color:var(--rd);color:#fff;text-align:center;font-weight:700;width:100%}.btn.pr:disabled{opacity:.6}
+label.f{display:block;font-size:14px;color:var(--mu);margin:12px 0 4px}
+input[type=text],input[type=tel],input[type=email],textarea{width:100%;font:inherit;font-size:17px;border:1.5px solid var(--li);border-radius:10px;padding:12px}
+input:focus,textarea:focus{border-color:var(--bl);outline:none}
+.file{display:flex;align-items:center;gap:10px;border:1.5px dashed var(--li);border-radius:12px;padding:14px;cursor:pointer;font-size:15px}.file input{display:none}.file b{color:var(--bl)}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:16px 0;font-size:14px}.chk input{width:22px;height:22px;flex:none;margin-top:1px}
+details{font-size:13px;color:var(--mu);margin:6px 0 14px}details div{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--li);border-radius:8px;padding:10px;margin-top:6px}
+.err{color:var(--rd);font-size:14px;min-height:20px;margin:6px 0}
+.ok{background:#e9f7ef;border-radius:12px;padding:16px;margin:12px 0}
+</style></head><body><div class="w" id="app"><p class="mu" style="margin-top:40px">Caricamento…</p></div>
+<script>
+var API='https://script.google.com/macros/s/AKfycby9Cq9WauFadqGQ00uPIv1dknVyWEnSvXnDMSeqMU2_pQPhJc_MRssHIsKxyf1eLJD8/exec',LOGO='https://giuseppescozia.github.io/cmon-pagine/logo.jpg';
+var UFF=(new URLSearchParams(location.search).get('u')||'').replace(/[^A-Za-z' ]/g,'').slice(0,40),X=null,F=null,app=document.getElementById('app');
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})}
+function testa(){var l=(X&&X.logo)||(LOGO.indexOf('/*')<0?LOGO:'');return '<div class="top">'+(l?'<img src="'+esc(l)+'" alt="">':'')+'<b>'+esc(X&&X.agenzia||'')+'</b></div>'}
+function fine(t){app.innerHTML=testa()+'<p style="margin-top:30px">'+esc(t)+'</p>'}
+function modulo(){app.innerHTML=testa()+'<div class="hero"><small>LAVORA CON NOI</small><h1>Entra nella nostra squadra</h1><p style="margin:0">Lascia i tuoi dati e il curriculum: li legge direttamente il titolare e ti richiamiamo noi.</p></div>'+
+  '<label class="f" for="nm">Nome e cognome</label><input type="text" id="nm" autocomplete="name"><label class="f" for="tl">Telefono</label><input type="tel" id="tl" autocomplete="tel"><label class="f" for="ml">Mail</label><input type="email" id="ml" autocomplete="email">'+
+  '<label class="f" for="cm">Dove abiti</label><input type="text" id="cm" placeholder="Comune"><label class="f" for="ms">Raccontaci qualcosa di te (facoltativo)</label><textarea id="ms" rows="3"></textarea>'+
+  '<label class="f">Curriculum (PDF, Word o foto, al massimo 5 MB)</label><label class="file"><input type="file" id="cv" accept=".pdf,.doc,.docx,image/jpeg,image/png"><span id="cvn"><b>Scegli il file</b> · facoltativo</span></label>'+
+  (X.informativa?'<details><summary>Informativa sulla privacy</summary><div>'+esc(X.informativa)+'</div></details>':'')+
+  '<label class="chk"><input type="checkbox" id="pv"><span>Ho letto l\'informativa e acconsento al trattamento dei miei dati per la selezione.</span></label><div class="err" id="er"></div><button class="btn pr" id="inv">Invia la candidatura</button>';
+  var cv=document.getElementById('cv');cv.onchange=function(){var f=cv.files[0],er=document.getElementById('er');F=null;if(!f)return;
+    if(f.size>5*1024*1024){er.textContent='Il file è troppo grande (massimo 5 MB)';cv.value='';return}er.textContent='';
+    var r=new FileReader();r.onload=function(){F={n:f.name.slice(0,80),t:f.type||'application/octet-stream',d:String(r.result).split(',')[1]};document.getElementById('cvn').innerHTML='<b>'+esc(f.name)+'</b> · pronto'};r.readAsDataURL(f)};
+  document.getElementById('inv').onclick=function(){var b=this,er=document.getElementById('er'),v=function(id){return document.getElementById(id).value.trim()};
+    if(v('nm').length<3){er.textContent='Scrivi nome e cognome';return}if(v('tl').replace(/\D/g,'').length<8){er.textContent='Controlla il numero di telefono';return}if(!document.getElementById('pv').checked){er.textContent='Serve il consenso per la selezione';return}
+    b.disabled=true;b.textContent='Invio in corso…';fetch(API,{method:'POST',credentials:'omit',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({api:'lavoraInvia',a:[{nome:v('nm'),tel:v('tl'),mail:v('ml'),comune:v('cm'),msg:v('ms'),uff:UFF,privacy:true,file:F}]})}).then(function(r){return r.json()}).then(function(o){if(o.errore)throw new Error(o.errore);
+      app.innerHTML=testa()+'<div class="ok"><h2>Candidatura inviata</h2><p>Grazie! La legge il titolare e ti richiamiamo noi.</p></div>'}).catch(function(e){b.disabled=false;b.textContent='Invia la candidatura';er.textContent=e.message})}}
+fetch(API+'?api=lavora',{credentials:'omit'}).then(function(r){return r.json()}).then(function(o){X=o;if(o.errore)return fine(o.errore);modulo()}).catch(function(){fine('Pagina non disponibile in questo momento. Riprova tra poco.')});
+</script></body></html>
