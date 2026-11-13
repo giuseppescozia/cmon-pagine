@@ -13,15 +13,15 @@ h1{font-size:18px;margin:0}.mu{color:var(--mu);font-size:13.5px}
 textarea{width:100%;min-height:170px;border:1.5px solid var(--li);border-radius:12px;padding:12px;font:16px/1.45 Arial,sans-serif;color:var(--fg);resize:vertical}
 .az{display:flex;gap:8px}.az button{flex:1;border:0;border-radius:10px;padding:13px;font:700 15px Arial;cursor:pointer}
 .b1{background:var(--rd);color:#fff}.b2{background:var(--so);color:var(--fg)}
+.az{justify-content:center;gap:40px}.az .tondo{flex:none;width:64px;height:64px;border-radius:50%;font-size:26px;padding:0}.lk{border:0;background:none;color:var(--mu);font-size:13px;text-decoration:underline;cursor:pointer;align-self:center}
+.w{justify-content:center}
 .err{background:#fde8ea;color:#9b1020;border-radius:10px;padding:10px 12px;font-size:14px}
 </style></head><body><div class="w">
-<h1>Detta la nota</h1>
-<div class="mu">Tocca il microfono e parla. Il testo compare qui sotto: puoi correggerlo, poi premi "Usa" e torna nel gestionale.</div>
 <button id="mic" aria-label="Parla"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10v1a7 7 0 0 0 14 0v-1M12 18v4M8 22h8"/></svg></button>
-<div id="st">Tocca per parlare</div>
-<textarea id="tx" placeholder="Qui compare quello che dici"></textarea>
+<div id="st">Parla pure</div>
+<textarea id="tx" placeholder="Qui compare quello che dici (puoi correggerlo)"></textarea>
 <div id="msg"></div>
-<div class="az"><button class="b2" id="copia">Copia</button><button class="b1" id="usa">Usa</button></div>
+<div class="az"><button class="b2 tondo" id="annulla" aria-label="Annulla">✕</button><button class="b1 tondo" id="usa" aria-label="Fatto">✓</button></div><button class="lk" id="copia">copia il testo</button>
 </div>
 <script>
 /* Pagina per dettare (Giuseppe 13/11): il gestionale su Google non può usare il microfono; questa pagina sì.
@@ -37,9 +37,10 @@ function parla(){if(!SR){msg('Questo browser non sa dettare: usa Chrome, Edge o 
   r.onresult=function(e){var tmp='';for(var i=e.resultIndex;i<e.results.length;i++){var x=e.results[i][0].transcript;if(e.results[i].isFinal)fin+=x;else tmp+=x}
     var t=(fin+tmp).trim();if(t)t=t.charAt(0).toUpperCase()+t.slice(1);$('#tx').value=base+sep+t};
   r.onerror=function(e){if(e.error==='not-allowed'||e.error==='service-not-allowed')msg('Il browser non ha dato il permesso al microfono: consentilo (icona nella barra dell\'indirizzo) e riprova.');else if(e.error==='no-speech')msg('Non ho sentito niente: riprova.')};
-  r.onend=function(){r=null;$('#mic').classList.remove('on');$('#st').textContent='Tocca per parlare'};
+  r.onend=function(){r=null;$('#mic').classList.remove('on');$('#st').textContent='Tocca il microfono per continuare'};
   try{r.start()}catch(e){r=null}}
 $('#mic').onclick=parla;
+$('#annulla').onclick=function(){ferma();window.close()};
 $('#copia').onclick=function(){var v=$('#tx').value;(navigator.clipboard?navigator.clipboard.writeText(v):Promise.reject()).then(function(){$('#st').textContent='Copiato: incollalo nella nota'}).catch(function(){$('#tx').select()})};
 $('#usa').onclick=function(){ferma();var v=$('#tx').value.trim();if(!v){msg('Non c\'è ancora niente da usare.');return}
   if(window.opener){try{window.opener.postMessage({tipo:'cmon-voce',id:id,testo:v},'*');window.close();return}catch(e){}}
