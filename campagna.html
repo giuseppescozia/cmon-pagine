@@ -22,6 +22,8 @@ details{font-size:13px;color:var(--mu);margin:6px 0 14px}details div{white-space
 .cond{font-size:13px;color:var(--mu);border-top:1px solid var(--li);margin-top:24px;padding-top:12px;white-space:pre-wrap}
 .ind{border:0;background:none;color:var(--mu);font:inherit;font-size:14px;padding:6px 0;cursor:pointer}
 textarea{min-height:80px;resize:vertical}.scelta{display:flex;flex-direction:column;gap:12px;margin:16px 0}.scelta button{font:inherit;text-align:left;border:1.5px solid var(--li);background:#fff;border-radius:14px;padding:16px;cursor:pointer;color:var(--fg)}.scelta button b{display:block;font-size:18px;color:var(--nv);margin-bottom:2px}.scelta button span{color:var(--mu);font-size:14px}.scelta button:hover{border-color:var(--bl)}
+.gal{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;border-radius:14px;margin:0 0 6px;background:#eef1f7}.gal::-webkit-scrollbar{display:none}.gi{flex:0 0 100%;scroll-snap-align:start;aspect-ratio:4/3}.gi img{width:100%;height:100%;object-fit:cover;display:block}
+.gcnt{font-size:12.5px;color:var(--mu);text-align:center;margin-bottom:10px}.vid{position:relative;aspect-ratio:16/9;margin:6px 0 12px;border-radius:12px;overflow:hidden;background:#000}.vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
 </style></head><body><div class="w" id="app"><p class="mu" style="margin-top:40px">Caricamento…</p></div>
 <script>
 var API='https://script.google.com/macros/s/AKfycby9Cq9WauFadqGQ00uPIv1dknVyWEnSvXnDMSeqMU2_pQPhJc_MRssHIsKxyf1eLJD8/exec',LOGO='https://giuseppescozia.github.io/cmon-pagine/logo.jpg';
@@ -33,8 +35,15 @@ function fine(t){app.innerHTML=testa()+'<p style="margin-top:30px">'+esc(t)+'</p
 function post(api,a){return fetch(API,{method:'POST',credentials:'omit',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({api:api,c:TOK,a:a})}).then(function(r){return r.json()}).then(function(o){if(o.errore)throw new Error(o.errore);return JSON.parse(o.r)})}
 var N=0;function tot(){return (C.domande||[]).length+2}
 function barra(){return '<div class="bar"><i style="width:'+Math.round(100*(S.i+1)/tot())+'%"></i></div>'}
-function inizio(){S.i=-1;app.innerHTML=testa()+'<h1>'+esc(C.titolo)+'</h1>'+(C.sotto?'<p>'+esc(C.sotto)+'</p>':'')+'<p class="mu">Il test richiede circa un minuto.</p><button class="btn pr" id="go">Inizia</button>'+(C.condizioni?'<div class="cond">'+esc(C.condizioni)+'</div>':'');
-  document.getElementById('go').onclick=function(){S.i=0;comune()}}
+/* foto e video della campagna (15/11): la copertina in cima; per cantieri e open house le altre scorrono (carosello); il video di YouTube sotto */
+var FOTO={};
+function media(){var n=C.nf||0,h='';if(n){var k=C.carosello?Math.min(n,12):1;h+='<div class="gal" id="gal">';for(var i=0;i<k;i++)h+='<div class="gi"><img data-i="'+i+'" alt=""></div>';h+='</div>'+(k>1?'<div class="gcnt" id="gcnt">1 / '+k+' · scorri</div>':'')}
+  if(C.video&&/^[\w-]{11}$/.test(C.video))h+='<div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/'+C.video+'" title="Video" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>';return h}
+function caricaFoto(){var L=app.querySelectorAll('img[data-i]');L.forEach(function(im){var i=im.getAttribute('data-i');if(FOTO[i]){im.src=FOTO[i];return}
+  fetch(API+'?api=campfoto&cp='+TOK+'&i='+i,{credentials:'omit'}).then(function(r){return r.json()}).then(function(o){if(o&&o.r){FOTO[i]=o.r;im.src=o.r}else im.parentNode.style.display='none'}).catch(function(){})});
+  var g=document.getElementById('gal'),c=document.getElementById('gcnt');if(g&&c)g.addEventListener('scroll',function(){c.textContent=(Math.round(g.scrollLeft/g.clientWidth)+1)+' / '+g.children.length+' · scorri'},{passive:true})}
+function inizio(){S.i=-1;app.innerHTML=testa()+media()+'<h1>'+esc(C.titolo)+'</h1>'+(C.sotto?'<p>'+esc(C.sotto)+'</p>':'')+'<p class="mu">Il test richiede circa un minuto.</p><button class="btn pr" id="go">Inizia</button>'+(C.condizioni?'<div class="cond">'+esc(C.condizioni)+'</div>':'');
+  document.getElementById('go').onclick=function(){S.i=0;comune()};caricaFoto()}
 function comune(){var A=C.ammessi||[];app.innerHTML=testa()+barra()+'<h2>In che comune è la casa?</h2><input type="text" id="cm" list="cml" autocomplete="off" placeholder="Scrivi il comune" value="'+esc(S.comune)+'"><datalist id="cml">'+A.map(function(x){return '<option value="'+esc(x)+'">'}).join('')+'</datalist><div class="err" id="er"></div><button class="btn pr" id="av">Avanti</button>';
   var i=document.getElementById('cm');i.focus();document.getElementById('av').onclick=function(){var v=i.value.trim().toUpperCase();if(v.length<2){document.getElementById('er').textContent='Scrivi il comune';return}S.comune=v;S.i=1;domanda()}}
 function domanda(){var k=S.i-1,q=(C.domande||[])[k];if(!q)return contatti();
