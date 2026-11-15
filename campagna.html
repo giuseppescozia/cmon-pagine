@@ -83,5 +83,5 @@ function dopo(){if(C.offerta==='nessuna')return grazie(false);
   document.getElementById('no').onclick=function(){grazie(false)}}
 function grazie(oto){app.innerHTML=testa()+'<div class="ok"><h2>'+(oto?'Richiesta ricevuta':'Grazie, abbiamo ricevuto il test')+'</h2>'+(X.chiusa?riapre():'<p>'+(oto?'Ti chiamiamo al più presto per fissare giorno e ora.':'Ti contattiamo nei prossimi giorni.')+'</p>')+'</div>'}
 if(!/^[a-f0-9]{24}$/.test(TOK))fine('Link non valido.');
-else fetch(API+'?api=campagna&cp='+TOK,{credentials:'omit'}).then(function(r){return r.json()}).then(function(o){X=o;if(o.errore)return fine(o.errore);C=o.c;document.title=C.titolo||'Valutazione';if(SRC==='serv'&&C.fissa){document.title='Come possiamo aiutarti?';scelta()}else inizio()}).catch(function(){fine('Pagina non disponibile in questo momento. Riprova tra poco.')});
+else fetch(API+'?api=campagna&cp='+TOK+(Q.get('u')?'&u='+encodeURIComponent(Q.get('u')):''),{credentials:'omit'}).then(function(r){return r.json()}).then(function(o){X=o;if(o.errore)return fine(o.errore);C=o.c;document.title=C.titolo||'Valutazione';if(SRC==='serv'&&C.fissa){document.title='Come possiamo aiutarti?';scelta()}else inizio()}).catch(function(){fine('Pagina non disponibile in questo momento. Riprova tra poco.')});
 </script></body></html>
